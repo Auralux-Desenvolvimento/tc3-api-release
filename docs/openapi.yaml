@@ -1,0 +1,2972 @@
+openapi: '3.0.3'
+info:
+  title: TC3 API Documentation
+  version: 1.0.0
+
+components:
+  parameters:
+    GenericPathId:
+      name: id
+      in: path
+      description: Some generic id
+      schema:
+        type: string
+        format: uuid
+      required: true
+    GenericPathToken:
+      name: token
+      in: path
+      description: Some generic id
+      schema:
+        type: string
+        format: uuid
+      required: true
+
+  securitySchemes:
+    JWT:
+      type: apiKey
+      in: cookie
+      name: auth_token
+      description: A Json Web Token.
+
+  schemas:
+    AdvisorData:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The advisor's name
+          maxLength: 254
+          example: João
+        photoURL:
+          type: string
+          format: url
+          description: The link to a photo of the advisor
+          example: https://avatars.githubusercontent.com/u/65315866?v=4
+        email:
+          type: string
+          description: The advisor's email (it'll only be displayed when both teams got an agreement)
+          example: email@example.com
+      required: [ name, email ]
+
+    AdvisorDataWithId:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 2debc5e4-1c03-4591-af97-63c3c5f9a2f9
+          required: [ id ]
+        - $ref: "#/components/schemas/AdvisorData"
+
+    MemberData:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The member's name
+          maxLength: 254
+          example: Afonso Abreu
+        photoURL:
+          type: string
+          format: url
+          description: The link to a photo of the member
+          example: https://avatars.githubusercontent.com/u/65315866?v=4
+        role:
+          type: string
+          description: The name of the member's role in the team
+          maxLength: 45
+          example: Fullstack Dev
+        birthday:
+          type: string
+          format: ISO 8601 Date
+          description: The member's birthday
+          example: 2003-10-13T00:00:00-0300
+        description:
+          type: string
+          description: A brief description about the member
+          maxLength: 254
+          example: example
+      required: [ name, role, birthday ]
+
+    MemberDataWithId:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: The member's id
+              example:  f5f01cd5-c091-4b65-b534-88c98aa6561e
+          required: [ id ]
+        - $ref: '#/components/schemas/MemberData'
+
+    _additionalTeamData:
+      type: object
+      properties:
+        themeDescription:
+          type: string
+          description: The team's theme description
+          nullable: true
+          example: An e-commerce made to the W&K Bordados enterprise, it sells embroideries files to other companies that sell physical embroideries.
+        portfolio:
+          type: object
+          additionalProperties: true
+          nullable: true
+          example: {
+            ''
+          }
+
+    TeamData:
+      allOf:
+        - $ref: '#/components/schemas/ListItemTeam'
+        - $ref: '#/components/schemas/_additionalTeamData'
+
+    TeamDataWithId:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: The team's UUID
+              example: 152c3638-7eb2-49a3-9db8-c1eb8f79df59
+        - $ref: '#/components/schemas/ListItemTeam'
+        - $ref: '#/components/schemas/_additionalTeamData'
+
+    CompleteTeamData:
+      allOf:
+        - type: object
+          properties:
+            advisors:
+              type: array
+              items:
+                $ref: "#/components/schemas/AdvisorDataWithId"     
+              example: [
+                {
+                  "id": "6265b07d-bee2-4826-874d-31cab7fb5938",
+                  "name": "João",
+                  "photoURL": "https://avatars.githubusercontent.com/u/65315866?v=4",
+                  "email": "email@example.com"
+                }
+              ]  
+            members:
+              type: array
+              items:
+                $ref: '#/components/schemas/MemberDataWithId'
+              example:
+                - id: 0fd2351c-62ed-4e2b-b725-8ec0faa48726
+                  name: Afonso Abreu
+                  photoURL: https://avatars.githubusercontent.com/u/65315866?v=4
+                  role: Fullstack Dev
+                  birthday: 2003-10-13T00:00:00-0300
+                  description: example
+                - id: 41605d4b-0701-425e-bee4-9af3e5166192
+                  name: Gabriel Muniz
+                  photoURL: https://avatars.githubusercontent.com/u/68306917?v=4
+                  role: Frontend Dev
+                  birthday: 2003-12-10T00:00:00-0300
+                  description: example
+                - id: 5a8fb60c-4c34-4aee-acb1-cec299854f7c
+                  name: João Victor
+                  photoURL: https://avatars.githubusercontent.com/u/59948734?v=4
+                  role: Fullstack Dev
+                  birthday: 2003-11-09T00:00:00-0300
+                  description: example
+                - id: 0d623039-03cb-4bff-a6d4-4f02424aa883
+                  name: Matheus Romeiro
+                  photoURL: https://avatars.githubusercontent.com/u/65318621?v=4
+                  role: Frontend Dev
+                  birthday: 2004-06-19T00:00:00-0300
+                  description: example
+                - id: d9bd7219-9c5d-47b6-86d4-d129cf80a8c1
+                  name: Cawan Felipe
+                  photoURL: https://avatars.githubusercontent.com/u/61788819?v=4
+                  role: Product Owner
+                  birthday: 2001-05-29T00:00:00-0300
+                  description: example
+        - $ref: '#/components/schemas/TeamDataWithId'
+
+    AppError:
+      type: object
+      properties:
+        message:
+          type: string
+        details:
+          description: Details about the error
+          oneOf:
+            - type: array
+            - type: boolean
+            - type: number
+            - type: object
+            - type: string
+        code:
+          type: number
+          description: The error code
+      required:
+        - message
+        - code
+
+    JWT:
+      type: string
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTdmZTQ0YzQzYWQwYjAwMThmOGQ5ZmQiLCJuYW1lIjoiV2FsZGVtYXIgTmV0byIsImVtYWlsIjoid2FsZGVtYXJudEBnbWFpbC5jb20iLCJwYXNzd29yZCI6IiQyYiQxMCRsUlZjWkc5d0dIVWJXcHF2TnJNR0F1SnNoWWJTR1RLSElQL3NycDlmTlkzZENFZDBJQjN6TyIsImlhdCI6MTU4NTQ0MDUxNywiZXhwIjoxNTg1NDYwNTE3fQ.JNtzLgCKGTAU9_-QjYUNxtM7X4nMU_pPIsNXDsEM-vP
+      pattern: ^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$
+
+    ListItemTeam:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The team's name
+          maxLength: 45
+          example: Team Kepler
+        logoURL:
+          type: string
+          format: url
+          nullable: true
+          description: An URL to the team's logo or profile picture that will be rendered
+          example: https://avatars.githubusercontent.com/u/80424909?s=400&u=25631fde040e06b385b8821ee79618c774b3c85d&v=4
+        course:
+          type: string
+          description: A string that identifies the course of the team
+          maxLength: 254
+          example: System Dev
+        theme:
+          type: string
+          description: The team's project theme
+          maxLength: 50
+          nullable: true
+          example: E-commerce
+        city:
+          type: string
+          description: The team's city
+          example: Praia Grande, São Paulo - Brazil
+      required:
+        - "name"
+        - "logoURL"
+        - "course"
+        - "theme"
+        - "city"
+
+    ListItemTeamWithId:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: The team's id
+              example: 2189b9b2-b5b5-472c-a1e1-6d3797652054
+        - $ref: '#/components/schemas/ListItemTeam'
+
+    Report:
+      type: object
+      properties:
+        reporter:
+          type: object
+          description: The team that issued the report
+          properties:
+            id:
+              type: string
+              format: uuid
+              example:  7e5e9898-37bd-4ca3-aed7-dd330444154f
+            name:
+              type: string
+              description: The team's name
+              example: Kepler
+        reported:
+          type: object
+          description: The team that was reported
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: bcdd4b86-8842-42e8-8b1f-6aaf22d8aae7
+            name:
+              type: string
+              description: The team's name
+              example: Fenix
+            logoURL:
+              type: string
+              format: url
+              nullable: true
+              description: An URL to the team's logo or profile picture that will be rendered
+              example: https://avatars.githubusercontent.com/u/80424909?s=400&u=25631fde040e06b385b8821ee79618c774b3c85d&v=4
+        type:
+          type: string
+          enum: [ 'chat', 'team' ]
+          description: Type of Report
+          example: chat
+        message:
+          type: string
+          description: Description of report
+          example: >
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris aliquam blandit dolor nec maximus. Ut ut leo ante. Nullam congue metus eget iaculis ullamcorper. Donec vehicula laoreet vestibulum. Vivamus sit amet sollicitudin est. Duis sed aliquam magna, a dictum ipsum. Aenean id ligula lectus. Suspendisse consequat ac turpis id lacinia. Phasellus ut semper nisi. Phasellus eu metus dapibus, fringilla enim quis, vulputate tortor. Phasellus ullamcorper nunc diam, non viverra dui viverra sed. Sed mollis faucibus justo. Nunc at lorem id odio aliquet tristique.
+        createdAt:
+          type: string
+          format: ISO 8601 Date
+          example: 2021-09-13T00:00:00-0300
+
+    ReportWithId:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: The report's id
+              example: ad14968c-d09c-40c4-a404-8df85da82223
+        - $ref: '#/components/schemas/Report'
+
+    CompleteReport:
+      allOf:
+        - $ref: '#/components/schemas/ReportWithId'
+        - type: object
+          properties:
+            reporter:
+              $ref: '#/components/schemas/ListItemTeamWithId'
+            reported:
+              $ref: '#/components/schemas/ListItemTeamWithId'
+            chatHistory:
+              type: object
+              properties:
+                createdAt:
+                  type: string
+                  format: ISO 8601 Date
+                  description: The chat's beginning
+                  example: 2021-07-15T20:30:21.379Z
+                isActive:
+                  type: boolean
+                  description: Indicates whether the chat is active or not
+                  example: true
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      sender:
+                        type: string
+                        format: uuid
+                        description: The message sender's id
+                        example: 54c44ffc-cfd0-4575-9949-9d445dac3847
+                      content:
+                        type: string
+                        description: The message's text
+                        example: Lorem ipsum dolor sit amet.
+                      createdAt:
+                        type: string
+                        format: ISO 8601 Date
+                        description: The time of the message delivery to the server     
+                        example: 2021-07-15T20:30:21.379Z
+            moderatorId:
+              type: string
+              format: uuid
+              description: The UUID of the moderator in charge of this report
+              example: 6169130f-87a9-40d7-bf24-260532fd951d
+            isResolved:
+              type: boolean
+              description: Whether this request is resolved or not
+              example: true
+          required: [ reporter, reported, isResolved ]
+
+    UserTeamData:
+      allOf:
+        - $ref: '#/components/schemas/CompleteTeamData'
+        - type: object
+          properties:
+            isVerified:
+              type: boolean
+              description: Indicates whether the user has their email verified or not
+              example: true
+            hasPreferences:
+              type: boolean
+              description: Indicates if the user has se their preferences.
+              example: true
+            isInAgreement:
+              type: boolean
+              description: Indicates if the user is in an agreement or not.
+              example: false
+      example: 
+        id: 152c3638-7eb2-49a3-9db8-c1eb8f79df59
+        name: Team Kepler
+        logoURL: https://avatars.githubusercontent.com/u/80424909?s=400&u=25631fde040e06b385b8821ee79618c774b3c85d&v=4
+        course: System Dev
+        theme: E-commerce
+        city: Praia Grande, São Paulo - Brazil
+        themeDescription: An e-commerce made to the W&K Bordados enterprise, it sells embroideries files to other companies that sell physical embroideries.
+        isVerified: true
+        hasPreferences: false
+        portfolio: {
+          "": null
+        }
+        isInAgreement: false
+        advisors: 
+          - name: João
+            photoURL: https://avatars.githubusercontent.com/u/65315866?v=4
+            email: email@example.com
+        members:
+          - id: 0fd2351c-62ed-4e2b-b725-8ec0faa48726
+            name: Afonso Abreu
+            photoURL: https://avatars.githubusercontent.com/u/65315866?v=4
+            role: Fullstack Dev
+            birthday: 2003-10-13T00:00:00-0300
+            description: example
+          - id: 41605d4b-0701-425e-bee4-9af3e5166192
+            name: Gabriel Muniz
+            photoURL: https://avatars.githubusercontent.com/u/68306917?v=4
+            role: Frontend Dev
+            birthday: 2003-12-10T00:00:00-0300
+            description: example
+          - id: 5a8fb60c-4c34-4aee-acb1-cec299854f7c
+            name: João Victor
+            photoURL: https://avatars.githubusercontent.com/u/59948734?v=4
+            role: Fullstack Dev
+            birthday: 2003-11-09T00:00:00-0300
+            description: example
+          - id: 0d623039-03cb-4bff-a6d4-4f02424aa883
+            name: Matheus Romeiro
+            photoURL: https://avatars.githubusercontent.com/u/65318621?v=4
+            role: Frontend Dev
+            birthday: 2004-06-19T00:00:00-0300
+            description: example
+          - id: d9bd7219-9c5d-47b6-86d4-d129cf80a8c1
+            name: Cawan Felipe
+            photoURL: https://avatars.githubusercontent.com/u/61788819?v=4
+            role: Product Owner
+            birthday: 2001-05-29T00:00:00-0300
+            description: example
+
+    City:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 1fbd6d6d-d069-4330-83ba-8996f261553f
+        name:
+          type: string
+          example: Praia Grande 
+
+    State:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: ed291ca3-1dbf-4e59-9d9b-d7b30bcc9923
+        state:
+          type: string
+          example: São Paulo
+        cities:
+          type: array
+          items:
+            $ref: '#/components/schemas/City'
+
+    Country:
+      type: object
+      properties:
+        countryID:
+          type: string
+          format: uuid
+          example: 57d0014f-bb9a-4790-8e94-27ea743902bd
+        countryName:
+          type: string
+          example: Brazil
+        states:
+          type: array
+          items:
+            $ref: '#/components/schemas/State'
+
+    Course:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: da672a2a-3677-4a12-998e-f698eec0c6a5
+        name:
+          type: string
+          example: System Dev
+
+    Post:
+      type: object
+      properties:
+        title:
+          type: string
+          example: A generic post
+        content:
+          type: object
+          additionalProperties: true
+          example: {
+            ''
+          }
+
+
+    PostWithId:
+      allOf:
+        - $ref: '#/components/schemas/Post'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 24d3c022-3202-4117-b31d-5555d7989027
+            createdAt:
+              type: string
+              format: ISO 8601 Date
+              example: 2003-10-13T00:00:00-0300
+
+    TeamPost:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The team's name
+          maxLength: 45
+          example: Equipe Kepler
+        logoURL:
+          type: string
+          format: url
+          description: An URL to the team's logo or profile picture that will be rendered
+          example: https://avatars.githubusercontent.com/u/80424909?s=400&u=25631fde040e06b385b8821ee79618c774b3c85d&v=4
+        password:
+          type: string
+          description: The team's password
+          example: mypassword1234
+        course:
+          type: string
+          description: A string that identifies the course of the team (either an UUID or the course's name)
+          example: System Dev
+        city:
+          type: string
+          format: uuid
+          description: The UUID of the team's city of residence
+          maxLength: 254
+          example: 0455532c-3526-4aca-9fc3-3cb31b9e4278
+        theme:
+          type: string
+          description: The team's project theme
+          maxLength: 50
+          example: The team's project theme
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberData'
+          example:
+            - name: Afonso Abreu
+              photoURL: https://avatars.githubusercontent.com/u/65315866?v=4
+              role: Fullstack Dev
+              birthday: 2003-10-13T00:00:00-0300
+              description: example
+            - name: Gabriel Muniz
+              photoURL: https://avatars.githubusercontent.com/u/68306917?v=4
+              role: Frontend Dev
+              birthday: 2003-12-10T00:00:00-0300
+              description: example
+            - name: João Victor
+              photoURL: https://avatars.githubusercontent.com/u/59948734?v=4
+              role: Fullstack Dev
+              birthday: 2003-11-09T00:00:00-0300
+              description: example
+            - name: Matheus Romeiro
+              photoURL: https://avatars.githubusercontent.com/u/65318621?v=4
+              role: Frontend Dev
+              birthday: 2004-06-19T00:00:00-0300
+              description: example
+            - name: Cawan Felipe
+              photoURL: https://avatars.githubusercontent.com/u/61788819?v=4
+              role: Product Owner
+              birthday: 2001-05-29T00:00:00-0300
+              description: example
+        advisor:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdvisorData"
+
+    ModeratorData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: cfa132b1-32b7-46dc-b282-9a09fc523e5c
+        name:
+          type: string
+          description: The moderator's name
+          example: John Doe
+        email:
+          type: string
+          format: email
+          description: The moderator's email
+          example: john.doe@email.com
+        isModerator:
+          type: boolean
+          default: true
+          description: This is necessary to decide whether the response from GET "/login" or POST "/login" means the data of a team or a moderator
+          example: true
+        isVerified:
+          type: boolean
+          description: Indicates whether the moderator has verified their email
+          example: false
+      required: [ id, name, email, isModerator ]
+
+  responses:
+    Generic500:
+      description: >
+        Possible errors:
+        0 - Generic internal error (please notify someone)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AppError'
+    Generic401:
+      description: >
+        Possible errors:
+        -1 - There's no token to be checked
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AppError'
+    Generic403:
+      description: >
+        Possible errors:
+        -1 - Invalid Token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AppError'
+    Generic404:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AppError'
+
+paths:
+  /team:
+    post:
+      operationId: RF001
+      description: Will create a new team with the data presented
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/TeamPost'
+                - type: object
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                      description: The team's email
+                      maxLength: 254
+                      example: equipekepler@gmail.com
+
+      responses:
+        '201':
+          description: The team was successfully created
+          headers:
+            Set-Cookie:
+              schema:
+                $ref: '#/components/schemas/JWT'
+        '400':
+          description: >
+            Possible errors:
+            -2 - Profanity detected
+            1 - Validation error
+            2 - The team already exists
+            3 - Unknown city
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    patch:
+      operationId: RF003-00
+      description: Will update the team's data that is sent
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/TeamPost'
+                - type: object
+                  properties:
+                    portfolio:
+                      type: object
+                      additionalProperties: true
+                      example: {
+                        ''
+                      }
+                    course:
+                      type: string
+                      example: Carpentry
+                      description: The course id
+                    themeDescription:
+                      type: string
+                      example: The team's project theme description
+                      description: The team's project theme description
+      responses:
+        '201':
+          description: The team was successfully updated
+        '400':
+          description:  >
+            Possible errors:
+            -2 - Profanity detected
+            1 - Validation error
+            2 - Invalid password
+            3 - Inexistent city
+            4 - Invalid portfolio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    delete:
+      operationId: RF004
+      description: Removes an account when the owner requests it
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The team's account was deleted successfully
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    get:
+      operationId: RF005-00
+      description: >
+        Will be the means of searching for teams regardless of the search preferences.
+        This route is exclusive for moderators.
+      security:
+        - JWT: []
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 2
+          description: The page index for the search     
+        - in: query
+          name: team
+          description: The team's name
+          required: false
+          schema:
+            type: string
+            example: Kepler
+        - in: query
+          name: course
+          description: The team's course UUID
+          required: false
+          schema:
+            type: string
+            format: uuid
+            example: e31ce3bf-c24f-436d-940a-9ff0278ae8e4
+        - in: query
+          name: city
+          description: The team's city UUID
+          required: false
+          schema:
+            type: string
+            format: uuid
+            example: e31ce3bf-c24f-436d-940a-9ff0278ae8e4
+      responses:
+        '200':
+          description: The process was successful
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListItemTeamWithId'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - No teams were found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/count:
+    get:
+      operationId: RF005-04
+      description: >
+        Will count all teams that satisfy a given collection of parameters
+      security:
+        - JWT: []
+      parameters:   
+        - in: query
+          name: team
+          description: The team's name
+          required: false
+          schema:
+            type: string
+            example: Kepler
+        - in: query
+          name: course
+          description: The team's course UUID
+          required: false
+          schema:
+            type: string
+            format: uuid
+            example: e31ce3bf-c24f-436d-940a-9ff0278ae8e4
+        - in: query
+          name: city
+          description: The team's city UUID
+          required: false
+          schema:
+            type: string
+            format: uuid
+            example: e31ce3bf-c24f-436d-940a-9ff0278ae8e4
+      responses:
+        '200':
+          description: The process was successful
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListItemTeamWithId'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - No teams were found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/update-password:
+    post:
+      operationId: RF003-01
+      description: A dedicated route for password updates
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  example: mypassword1234
+                newPassword:
+                  type: string
+                  example: qwerty1@
+              required: [ oldPassword, newPassword ]
+      responses:
+        '200':
+          description: Password updated successfully.
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - Invalid Password
+            3 - Same password as the previous
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+  /team/chat-token:
+    get:
+      operationId: FUN04
+      description: This route will return a JWT that will authenticate the user in the socketio server (basically it serves as the auth for all chat functionalities)
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The JWT
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JWT"
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          $ref: '#/components/responses/Generic403'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /locations:
+    get:
+      description: Will return an array of objects containing countries, states and cities
+      responses:
+        '200':
+          description: The list of countries, states and cities has been fetched
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/State'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/password-recovery:
+    post:
+      operationId: RF007-00
+      description: >
+        Will be the means of searching for teams regardless of the search preferences.
+        This route is exclusive for moderators.
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              format: email
+              description: The team email
+            example:
+              email: auraluxdev@gmail.com
+      responses:
+        '200':
+          description: A link to reset password has been sent to inserted email
+        '400':
+          description: >
+            Possible errors:
+            1 - There is no such team with the provided email
+            2 - A token already exists.
+            3 - Invalid email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          description: >
+            Possible errors:
+            0 - Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+
+  /team/password-recovery/new-password/{token}:
+    post:
+      operationId: RF007-01
+      description: Will receive the new team password
+      parameters:
+        - $ref: '#/components/parameters/GenericPathToken'      
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              description: The new password
+            example:
+              password: mynewpassword1234
+
+      responses:
+        '200':
+          description: The team's password was updated successfully
+        '400':
+          description: >
+            Possible errors:
+            1 - Missing confirm token (on path)
+            2 - Invalid password format
+            4 - Expired Token
+            5 - Previously used password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            3 - The token does not exist 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          description: >
+            Possible errors:
+            0 - Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+
+  /team/confirm-email:
+    get:
+      operationId: RF002-01
+      description: Will receive a request to send an email with the link to confirm the team email
+      security:
+        - JWT: []
+
+      responses:
+        '200':
+          description: Confirmation email has been sent
+        '400':
+          description: >
+            Possible errors:
+            1 - There is no such team with the provided email
+            2 - A token already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '403':
+          description: >
+            Possible errors:
+            3 - The team is not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          description: >
+            Possible errors:
+            0 - Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+
+  /team/confirm-email/{token}:
+    get:
+      operationId: RF002-02
+      description: Will receive by parameters a token that was sent to the team email to validate it
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathToken'
+
+      responses:
+        '200':
+          description: Confirmation email has been sent
+        '400':
+          description: >
+            Possible errors:
+            1 - Missing confirm token (on path)
+            3 - Expired Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - The token does not exist 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /login:
+    post:
+      operationId: RF006-00
+      description: Returns a JWT and the team's data if the credentials are correct
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 30  
+      responses:
+        '200':
+          description: The credentials were valid
+          headers:
+            Set-Cookie:
+              schema:
+                $ref: '#/components/schemas/JWT'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/UserTeamData'
+                  - $ref: '#/components/schemas/ModeratorData'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    get:
+      operationId: RF005-01 & RF006-01
+      description: Will return the team's data when receiving a valid JWT
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The token was valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTeamData'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          $ref: '#/components/responses/Generic403'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /logoff:
+    get:
+      description: Remove the team's token
+      parameters:
+        - $ref: '#/components/schemas/JWT'  
+      responses:
+        '200':
+          description: Logoff successfuly
+        '404':
+          $ref: '#/components/responses/Generic404'
+
+  /team/members:
+    post:
+      operationId: RF002-00
+      description: Create a new member
+      security:
+        - JWT: []      
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MemberData'  
+                - type: object
+                  properties:
+                    password:
+                      type: string
+                      example: mypassword1234
+                  required: [ password ]   
+      responses:
+        '201':
+          description: The member was successfully created                  
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDataWithId'                
+        '400':
+          description: >
+            Possible errors:
+            -2 - Profanity detected
+            1 - Validation error
+            2 - Invalid password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/advisors:
+    post:
+      operationId: RF038
+      description: Will create an advisor
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/AdvisorData'  
+                - type: object
+                  properties:
+                    password:
+                      type: string
+                      example: mypassword1234
+                  required: [ password ] 
+      responses:
+        '201':
+          description: The advisor was created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdvisorDataWithId"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/advisors/{id}:
+    delete:
+      operationId: RF003-02
+      description: Will delete the advisor with the id sent
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: The user's password
+                  example: mypassword1234
+              required: [ password ]
+      responses:
+        '200':
+          description: The advisor was successfully deleted                
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    patch:
+      operationId: RF003-03
+      description: Will update the advisor with the id sent
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The advisor's name
+                  maxLength: 254
+                  example: Afonso Abreu
+                photoURL:
+                  type: string
+                  format: url
+                  description: The link to a photo of the advisor
+                  example: https://avatars.githubusercontent.com/u/65315866?v=4
+                  nullable: true
+                email:
+                  type: string
+                  description: The advisor's email (it'll only be displayed when both teams got an agreement)
+                  example: email@example.com
+                password:
+                  type: string
+                  example: mypassword1234
+              required: [ password ]
+      responses:
+        '200':
+          description: The member was successfully updated                
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/{id}/interest:
+    post:
+      operationId: RF010 & RF011
+      description: Show interest or disinterest
+      security:
+        - JWT: []
+      parameters:
+        - name: id
+          in: path
+          description: The subject id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                interest:
+                  type: boolean
+                  description: Controller to indicate interest or disinterest
+            example:
+              interest: true    
+      responses:
+        '200':
+          description: The interest was shown
+        '400':
+          description: > 
+            Possible Errors:
+            1 - Validation error.
+            2 - You cannot show interest to yourself
+            4 - This team has already been shown interest by you
+            5 - You cannot show interest to other teams while in an agreement
+            6 - This team is already in an agreement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: > 
+            Possible Errors:
+            3 - There is no team with the indicated id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/interest:
+    get:
+      operationId: RF023
+      description: Retrieves a list of interests related to the request issuer
+      security:
+        - JWT: []        
+      responses:
+        '200':
+          description: The list itself
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    logo:
+                      type: string
+                      format: URL
+                    course:
+                      type: string
+                    isMine:
+                      type: boolean
+                      description: >
+                        Indicates whether the team is the agent or subject of the interest:
+                        true - subject
+                        false - agent
+              example:
+                - id: 27b631b4-aa8f-4f89-87f6-9ed5e1cb6d3b
+                  name: team1
+                  logo: https://www.tomorrowtides.com/kepler1.html
+                  course: System Dev
+                  isMine: true
+                - id: 01743248-e9a4-48d4-a365-eab7eb677ea5
+                  name: team2
+                  logo: https://www.tomorrowtides.com/kepler1.html
+                  course: Random course
+                  isMine: false
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action was a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            1 - No interested teams were found 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/preferences:
+    post:
+      operationId: RF008
+      description: Will create or replace the team's search preferences
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                city:
+                  type: string
+                  format: uuid
+                  description: The preferred city's UUID
+                state:
+                  type: string
+                  format: uuid
+                  description: The preferred state's UUID
+                hasTheme:
+                  type: boolean
+                  description: Whether the user prefers teams with or without themes
+                courses:
+                  type: array
+                  description: An array containing all preferred courses UUIDs
+                  items:
+                    type: string
+                    format: uuid
+                keywords:
+                  type: array
+                  description: An array containing all preferred keywords UUIDs
+                  items:
+                    type: string
+                    format: uuid
+              required: [ keywords ]
+            example:
+              city: 5cecf9db-fcb7-4b1b-b042-78ac92956f28
+              state: 94345b54-7a48-44fe-b275-6cffb7a967f2
+              hasTheme: false
+              courses:
+                - 5cf4c69d-7bdd-4678-a745-d61983f195bd
+                - eaefffe9-7343-4e66-a3e1-d75232e9cb20
+              keywords:
+                - 0d83a8d8-f729-40b9-91aa-1c1fcc1f0860
+                - 2a2bf820-354c-481f-be1e-a81b307a8d1b
+      responses:
+        '201':
+          description: Preferences set
+        '400':
+          description:  >
+            Possible errors:
+            1 - Validation error
+            2 - Invalid city
+            3 - Invalid state
+            4 - Invalid course
+            5 - Invalid keyword
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          $ref: '#/components/responses/Generic403'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    get:
+      operationId: RF005-03
+      description: Will return the team's current preferences
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: 'The information was successfully retrieved'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  area:
+                    type: string
+                    description: The preferred area for the team
+                    example: São Paulo - Brasil
+                  themePreference:
+                    type: boolean
+                    description: Whether the team wants another team with or without a theme (true means they do)
+                    example: true
+                  courses:
+                    type: array
+                    items:
+                      type: string
+                      description: The course name
+                    example:
+                      - "System Dev"
+                      - "Web Dev"
+                  keywords:
+                    type: array
+                    items:
+                      type: string
+                      description: The keyword name
+                    example:
+                      - "Chemistry"
+                      - "Academics"
+                required: [ keywords ]
+
+  /team/search:
+    get:
+      operationId: RF009-00
+      description: >
+        A search that will return only the relevant teams for the team that is searching, this includes only teams that:
+        - Haven't been seen before by the team that is searching (no interest or disinterest shown)
+        - Are fitting to the searching team's preferences
+        - Are not currently on an agreement with a 3rd team
+      security:
+        - JWT: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            example: 2
+          description: The page index for the search          
+      responses:
+        '200':
+          description: The results of this search
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompleteTeamData'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - User is in agreement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action is a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            3 - No teams found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/search/count:
+    get:
+      operationId: RF009-01
+      description: Will return the amount of potential matches for the team
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The count itself
+          content:
+            application/json:
+              schema:
+                type: number
+                example: 91
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:  
+            1 - No teams found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+      
+
+  /team/members/{id}:
+    delete:
+      operationId: RF003-04
+      description: Will delete the member with the id sent
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: The user's password
+                  example: mypassword1234
+              required: [ password ]
+      responses:
+        '200':
+          description: The member was successfully deleted                
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - Invalid password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    patch:
+      operationId: RF003-05
+      description: Will update the member with the id sent
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The member's name
+                  maxLength: 254
+                  example: Afonso Abreu
+                photoURL:
+                  type: string
+                  format: url
+                  description: The link to a photo of the member
+                  example: https://avatars.githubusercontent.com/u/65315866?v=4
+                  nullable: true
+                role:
+                  type: string
+                  description: The name of the member's role in the team
+                  maxLength: 45
+                  example: Fullstack Dev
+                birthday:
+                  type: string
+                  format: ISO 8601 Date
+                  description: The member's birthday
+                  example: 2003-10-13T00:00:00-0300
+                description:
+                  type: string
+                  description: A brief description about the member
+                  maxLength: 254
+                  example: example
+                  nullable: true
+                password:
+                  type: string
+                  example: mypassword1234
+              required: [ password ]
+      responses:
+        '200':
+          description: The member was successfully updated                
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - Invalid password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /report:
+    post:
+      operationId: RF014 & RF015
+      description: Will report the mentioned team or the chat with this team
+      security:
+        - JWT: []      
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Report'
+      responses:
+        '201':
+          description: The report was successfully sent                 
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - Reported team does not exists.
+            3 - Reported chat does not exists.
+        '500':
+          $ref: '#/components/responses/Generic500'
+    get:
+      operationId: RF016-00
+      description: Will fetch all the reports that are still not solved. Only moderators can use this resource.
+      security:
+        - JWT: []
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [ pending, taken_over, resolved ]
+            default: pending
+            example: taken-over
+          description: The type of results that will be shown
+        - in: query
+          name: page
+          schema:
+            type: number
+            minimum: 1
+            example: 2
+          description: The page to be accessed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportWithId'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - No reports were found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+  
+  /report/count:
+    get:
+      operationId: RF016-01
+      description: Will count all the reports that are still not solved. Only moderators can use this resource.
+      security:
+        - JWT: []
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [ pending, taken-over, resolved ]
+            default: pending
+            example: taken-over
+          description: The type of results that will be shown
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: number
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            1 - No reports were found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /report/{id}:
+    get:
+      operationId: RF016-02
+      description: Will fetch the mentioned report. Only moderators can use this resource.
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompleteReport'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /report/{id}/takeover:
+    post:
+      operationId: RF016-03
+      description: Will append the moderator to the report, making it so only they can resolve it (and it will also be invisible to other moderators)
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: >
+            Possible errors:
+            2 - The report is already taken over
+            3 - The report was already resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            1 - No report was found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'        
+
+  /report/{id}/resolve:
+    post:
+      operationId: RF017
+      description: Will mark the mentioned report as resolved, so it'll no longer appear as a pending report.
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: >
+            Possible errors:
+            2 - This is not your report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            1 - No report was found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/{id}:
+    get:
+      operationId: RF005-02
+      description: A moderator or a team that has shown interest will be able to get the complete profile of a team with it's id
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      responses:
+        '200':
+          description: The team's profile was retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompleteTeamData'
+        '400':
+          description: >
+            Possible errors:
+            -1 - You can only view a team (through this means) that has shown interest.
+            1 - Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - No teams found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/{id}/ban:
+    delete:
+      operationId: RF018
+      description: Will ban the mentioned team. Only moderators can perform this action.
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            3 - Team already banned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - There is no team with this id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/{id}/favourite:
+    post:
+      operationId: RF019
+      description: Will favourite the team with the id passed in the path
+      security:
+        - JWT: []
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation
+            2 - You cannot favourite yourself
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action was a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            3 - Subject team not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /team/favourite:
+    get:
+      operationId: RF020
+      description: Will return the favourite teams by the team that requested
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The key was created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/ListItemTeamWithId'
+                    - type: object
+                      properties:
+                        isFavourite:
+                          type: boolean
+                          description: A boolean to indicate if this team is in the user's favourites list
+                          example: true
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action was a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description:  >
+            Possible errors:
+            1 - No favourite team found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /moderator/key:
+    get:
+      operationId: RF021-00
+      description: Retrieves a single UUID key that may be used to create another moderator account
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The key was created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+              example: a4159a43-2d90-45ed-b9a1-27dd5d3f50a2
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /moderator/keys:
+    get:
+      operationId: RF021-01
+      description: Retrieves a list of keys that were created
+      security:
+        - JWT: []
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 2
+          description: The page index for the search 
+      responses:
+        '200':
+          description: The keys list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                      format: uuid
+                      description: The key
+                    issuer:
+                      type: object
+                      description: The moderator that issued the key
+                      properties:
+                        name:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                    receiver:
+                      type: object
+                      description: The moderator that used the key
+                      properties:
+                        name:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                  required: [ key ]
+              example:
+                - key: 66819146-cbc1-47fd-9cc5-83eb420d7bc9
+                  issuer:
+                    name: John Doe
+                    email: john.doe@email.com
+                  receiver:
+                    name: Jane Doe
+                    email: jane.doe@email.com
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            1 - No keys were found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /moderator:
+    post:
+      operationId: RF022
+      description: Creates a moderator account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                name:
+                  type: string
+                key:
+                  type: string
+                  format: uuid
+              example:
+                email: john.doe@email.com
+                name: John Doe
+                password: password
+                key: 55e0fe56-6d6f-4d31-9603-5cbac8a0199c
+      responses:
+        '201':
+          description: The moderator was created successfully.
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            3 - Key in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - The key does not exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          description: >
+            Possible errors:
+            0 - Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+
+    patch:
+      operationId: RF039-00
+      description: Will update the moderator's information (only the name for now)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: The moderator's current password
+                  example: mypassword1234
+                name:
+                  type: string
+                  description: The moderator's new name
+                  example: Josh
+              required: [ password, name ]
+      responses:
+        '200':
+          description: The moderator's data was updated successfully.
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - Invalid password
+            3 - The new name cannot be the same as the old one 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /moderator/password:
+    patch:
+      operationId: RF039-01
+      description: This will update the moderator's password 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  example: mypassword1234
+                newPassword:
+                  type: string
+                  example: qwerty1@
+              required: [ oldPassword, newPassword ]
+      responses:
+        '200':
+          description: The password was updated successfully
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - Invalid password
+            3 - The new password cannot be the same as the previous password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'        
+
+  /course:
+    get:
+      operationId: RF031-00
+      description: Will return the list of all courses from the database. This is only accessible to moderators.
+      parameters:
+        - name: name
+          in: query
+          description: The name of the course
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 2
+          description: The page index for the search 
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The list of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - No courses were found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    post:
+      operationId: RF032
+      description: Will create a course
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: DevOps
+      responses:
+        '201':
+          description: The course was created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - No courses were found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /course/count:
+    get:
+      operationId: RF031-01
+      description: Will return the total of courses presents in the platform
+      parameters:
+        - name: name
+          in: query
+          description: The name of the course
+          schema:
+            type: string
+          required: false
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The count of courses
+          content:
+            application/json:
+              schema:
+                type: number
+                example: 26
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /course/{id}:
+    delete:
+      operationId: RF033
+      description: Will delete the course with said id
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The course was deleted successfully
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - You cannot delete this course because there are people already using it, try merging it instead
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - There's no course with such id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    patch:
+      operationId: RF034
+      description: Will update a course
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: DevOps
+      responses:
+        '200':
+          description: The course was updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - There's no course with such id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /course/merge:
+    post:
+      operationId: RF035
+      description: Will receive a primary id and a list of secondary ids that will be replaced by the primary id
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                primary:  
+                  type: string
+                  format: uuid
+                secondaries:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+              example:
+                primary: f69d6a50-0821-422f-b54a-07111db1a860
+                secondaries:
+                  - 8c94e82f-1e5f-4c04-8eb4-5e073b34ea32
+                  - 0bec247e-fc94-472a-b533-672eb2655335
+      responses:
+        '200':
+          description: The merging was successful
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+            2 - Invalid ids
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /course/search/{name}:
+    get:
+      operationId: RNF017
+      description: Will return a set of potential matches for the received string (the top 5 more similar)
+      parameters:
+        - name: name
+          in: path
+          description: The name of the course
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: The potential matches.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    similarity:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                example:
+                  - id: 984fd000-b472-4937-a2bb-c8c6f333740f
+                    name: Web Development
+                  - id: 4560b4d9-1e2e-4b34-b78e-4a24188e186f
+                    name: Chemistry
+                maxLength: 5
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /post:
+    get:
+      operationId: RF037-00
+      description: Will return a list of posts
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 2
+          description: The page index for the search 
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: A list of posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostWithId'
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: >
+            Possible errors:
+            2 - No posts found
+        '500':
+          $ref: '#/components/responses/Generic500'
+    post:
+      operationId: RF037-01
+      description: Will create of post
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        '201':
+          description: The post was successfully created
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /post/{id}:
+    delete:
+      operationId: RF037-02
+      description: Will delete of post
+      parameters:
+        - $ref: '#/components/parameters/GenericPathId'
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: The post was successfully deleted
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          description: The user attempting this action wasn't a moderator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+      
+  /keyword/search/{name}:
+    get:
+      operationId: RF041
+      description: Will return a set of potential matches for the received string (the top 5 more similar)
+      parameters:
+        - name: name
+          in: path
+          description: The name of the keyword
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: The potential matches.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    similarity:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                example:
+                  - id: 829207f0-99b3-4e93-ad49-6ffdd25a84e6
+                    name: Academics
+                    similarity: 0.9 
+                  - id: a176d5ba-b7f0-4ff0-9f26-ec50a4591c00
+                    name: Chemistry
+                    similarity: 0.7
+                maxLength: 5
+        '400':
+          description: >
+            Possible errors:
+            1 - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          $ref: '#/components/responses/Generic500'

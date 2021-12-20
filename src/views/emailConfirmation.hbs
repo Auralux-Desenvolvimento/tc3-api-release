@@ -1,0 +1,58 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmação de E-mail</title>
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; background-color: #f3f3f3;">
+  <table style="width: 100vw; table-layout: fixed;">
+    <tr>
+      <td colspan="9" style="text-align: center;">
+        <img
+          src="{{backendOrigin}}/static/TCCConecta.svg"
+          alt="TCC conecta"
+          style="width: 30%;"
+        />
+      </td>
+    </tr>
+    <tr>
+      <td colspan="9" style="text-align: center;">
+        <h1>CONFIRME SEU E-MAIL</h1>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        <img
+          src="{{backendOrigin}}/static/img-message.svg"
+          style="width: 100%;"        
+        />
+      </td>
+      <td style="word-wrap: break-word;" colspan="4">
+        <p>
+          Muito obrigado por se cadastrar no TCC Conecta! Para aproveitar 100% do
+          nosso site – e para sua segurança – por favor, clique no botão abaixo e
+          confirme seu e-mail!
+        </p>
+        <p >
+          Lembre-se,
+          <b>Essa mensagem tem a validade de 30 minutos!</b>
+          Se você não tem ciência dessa solicitação, por favor, desconsidere este
+          e-mail e não transmita essa mensagem a ninguém.
+        </p>
+        <a href="{{frontendOrigin}}/confirmar-email/{{token}}" style="
+          text-decoration: none;
+          background-color: #4a14e0;
+          color: white;
+          padding: 10px;
+          font-size: 20px;
+          border-radius: 10px;
+        ">
+          Confirmar e-mail
+        </a>
+        <p >Caso o botão não funcione, tente por esse link:{{frontendOrigin}}/confirmar-email/{{token}}</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

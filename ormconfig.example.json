@@ -1,0 +1,22 @@
+{
+  "type": "mysql",
+  "host": "localhost",
+  "port": 3306,
+  "username": "root",
+  "password": "password",
+  "database": "tc3",
+  "synchronize": false,
+  "logging": false,
+  "entities": [
+    "src/models/**/*.ts"
+  ],
+
+  "migrations": [
+    "src/database/migrations/**/*.ts"
+  ],
+  
+  "cli": {
+    "entitiesDir": "src/models",
+    "migrationsDir": "src/database/migrations"
+  }
+}

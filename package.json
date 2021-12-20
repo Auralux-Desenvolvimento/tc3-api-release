@@ -1,0 +1,68 @@
+{
+  "name": "tc3-api",
+  "version": "1.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon",
+    "start:build": "set NODE_ENV=production && node build/index.js",
+    "start:prod": "npm run setup-db:prod && npm run start:build",
+    "start:allow-errors": "set NODE_ENV=allow-errors&&nodemon",
+    "start:allow-all-errors": "set NODE_ENV=allow-all-errors&&nodemon",
+    "build": "rimraf ./build && tsc && copyfiles -u 1 src/**/*.hbs src/public/* build/",
+    "build:start": "npm run build && npm run start:build",
+    "typeorm": "ts-node node_modules/typeorm/cli.js",
+    "get-locations": "set NODE_ENV=allow-errors&&ts-node src/utils/functions/getLocations.ts",
+    "get-locations:prod": "set NODE_ENV=allow-errors&&node build/utils/functions/getLocations.js",
+    "setup-db": "npm run typeorm migration:run && npm run get-locations",
+    "setup-db:prod": "node node_modules/typeorm/cli.js migration:run && npm run get-locations:prod"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Auralux-Desenvolvimento/tc3-api.git"
+  },
+  "keywords": [],
+  "author": "https://github.com/Auralux-Desenvolvimento",
+  "license": "GNU GPLv3.0",
+  "homepage": "https://tccconecta.herokuapp.com/",
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/cookie-parser": "^1.4.2",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/jsonwebtoken": "^8.5.4",
+    "@types/node": "^16.4.0",
+    "@types/node-fetch": "^2.5.12",
+    "@types/nodemailer": "^6.4.4",
+    "@types/string-similarity": "^4.0.0",
+    "@types/uuid": "^8.3.1",
+    "copyfiles": "^2.4.1",
+    "nodemon": "^2.0.12",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "class-validator": "^0.13.1",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-async-errors": "^3.1.1",
+    "handlebars": "^4.7.7",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^2.2.5",
+    "node-fetch": "^2.6.1",
+    "nodemailer": "^6.6.3",
+    "pg": "^8.7.1",
+    "reflect-metadata": "^0.1.13",
+    "string-similarity": "^4.0.4",
+    "typeorm": "^0.2.34",
+    "uuid": "^8.3.2",
+    "yup": "^0.32.9"
+  }
+}
